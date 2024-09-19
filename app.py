@@ -10,7 +10,6 @@ from google.oauth2 import service_account
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.docstore.document import Document
 from langchain_openai import ChatOpenAI
@@ -72,7 +71,31 @@ client = get_bigquery_client()
 def load_data():
     try:
         query = """
-        SELECT * FROM `bmw-recommendation-engine.talk_to_your_data.bmw_posts_test`
+        SELECT
+            post_url,
+            post_caption,
+            post_id,
+            `model`,
+            POST_REACTIONS_ANGER,
+            POST_REACTIONS_HAHA,
+            POST_REACTIONS_LOVE,
+            POST_REACTIONS_LIKE,
+            POST_REACTIONS_PRIDE,
+            POST_REACTIONS_SORRY,
+            POST_REACTIONS_THANKFUL,
+            POST_REACTIONS_WOW,
+            POST_COMMENTS,
+            avg_sentiment_score
+            background_description,
+            car_angle,
+            car_as_main_subject,
+            car_color,
+            car_movement,
+            car_view,
+            ev_features,
+            human_presence,
+        FROM
+            `bmw-recommendation-engine.talk_to_your_data.bmw_posts_test`
         """
         query_job = client.query(query)
         results = query_job.result()
@@ -131,32 +154,40 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 # Setup the language model for generating responses
 llm = ChatOpenAI(
     temperature=0,
-    model="gpt-3.5-turbo-16k-0613",
+    model="gpt-4o",
     max_tokens=1000,
     openai_api_key=openai_api_key,
 )
 
 # Define the prompt template for the assistant
 template = """
-Eres un asistente de inteligencia artificial que proporciona soporte a los empleados de Banco Santa Fe. Banco Santa Fe es un banco argentino.
+You are an artificial intelligence assistant and should act as a media data analyst. You will deal with data from Facebook posts. You will have access to the post ID, URL, metrics such as reactions and their respective quantities, number of comments, and the average sentiment of the comments on that post (i.e., performing a sentiment analysis of all the comments on the post, with a score from -1 to 1, where -1 is very negative and 1 is very positive). You should also consider the number of comments, as a post with only 1 comment and a sentiment score of 1 is not that impactful.
 
-Se te proporcionará una lista de información relacionada con Banco Santa Fe. Responde a la pregunta del empleado basándote únicamente en la información proporcionada. Si la pregunta no está cubierta en la información, responde con "Lo siento. No tengo esta información."
+The posts are from a car salesperson, so you will also have access to information such as:
 
-Sigue estas directrices:
-- Siempre responde en español.
-- Si no estás seguro de la respuesta, di "No sé" y pide una pregunta más detallada.
-- Proporciona respuestas completas e informativas sin ser excesivamente verboso.
+- The angle of the car in the post image
+- Whether there are humans in the post image
+- Description of the image background
+- Color of the car in the image
+- Whether the car is moving or stationary in the image
+- Whether there is a car in the image
+- Whether the car is the main focus of the image
+- Overall features of the image
+- tags_market, which in this case represents the country of the post
+- The model of the car in the image
+- The post description
+- Answer user questions and requests based on the information I will provide as a knowledge base. If a question is asked and you cannot answer it with this information, you should respond with "I don't have this information."
 
-**Historial de conversación:**
+**Conversation history:**
 {chat_history}
 
-**Pregunta del empleado:**
+**Question/request:**
 {message}
 
-**Información:**
+**Your knowledge base:**
 {info}
 
-**Respuesta:**
+**Answer:**
 """
 
 # Create a PromptTemplate with the specified input variables
@@ -165,7 +196,7 @@ prompt = PromptTemplate(
 )
 
 # Create the LLMChain with the language model, prompt, and memory
-chain = LLMChain(llm=llm, prompt=prompt, memory=memory)
+chain = prompt | llm
 
 
 # Function to generate a response using the language model and retrieved information
@@ -173,17 +204,19 @@ def generate_response(message):
     try:
         docs = retrieve_info(message)
         if not docs:
-            return "Lo siento. No tengo esta información."
-        # Concatenate the content of retrieved documents
-        info_text = ""
-        for doc in docs:
-            info_text += doc.page_content + "\n"
-        # Generate the response using the language model chain
-        response = chain.run(message=message, info=info_text)
-        return response
+            return "Sorry, i don't have this information"
+        info_text = "\n".join([doc.page_content for doc in docs])
+        response = chain.invoke(
+            {
+                "message": message,
+                "info": info_text,
+                "chat_history": memory.chat_memory.messages,
+            }
+        )
+        return response.content
     except Exception as e:
         logger.error(f"Error generating response: {e}")
-        return "Error obteniendo la respuesta."
+        return f"Error generating response: {e}"
 
 
 # Build the Streamlit application interface
