@@ -1,0 +1,11 @@
+fastapi
+openai
+python-dotenv
+pydantic
+langchain
+faiss-cpu
+tiktoken
+watchdog
+streamlit
+google-cloud-bigquery
+langchain-community
