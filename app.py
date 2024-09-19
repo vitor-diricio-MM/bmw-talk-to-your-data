@@ -223,7 +223,7 @@ def generate_response(message):
 
 # Build the Streamlit application interface
 def main():
-    st.header("BMW TALK TO YOUR DATA")
+    st.header("BMW Facebook posts")
     st.write("Talk to your posts data...")
 
     # Initialize session state for conversation history if not already initialized
