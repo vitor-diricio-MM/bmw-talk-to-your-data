@@ -19,7 +19,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # configure page
-st.set_page_config(page_title="BMW TALK TO YOUR DATA", page_icon="💬")
+st.set_page_config(
+    page_title="BMW data-talk",
+    page_icon="./assets/BMW-icon.png",  # Replace with your icon path
+    initial_sidebar_state="expanded",  # Optional
+)
+
+col1, col2, col3 = st.columns([1, 2, 1])
+
+with col2:
+    # Create a container for the logos
+    logo_container = st.container()
+
+    # Display the logos side by side
+    left_co, right_co = logo_container.columns(2)
+    with left_co:
+        st.image("assets/BMW-icon.png", width=100)  # Adjust path and width as needed
+    with right_co:
+        st.image("assets/monks-white.png", width=200)  # Adjust path and width as needed
 
 
 # Retrieve the OpenAI API key from environment variables
