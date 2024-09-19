@@ -21,27 +21,12 @@ logger = logging.getLogger(__name__)
 # configure page
 st.set_page_config(page_title="BMW TALK TO YOUR DATA", page_icon="💬")
 
-# Load environment variables from .env file
-load_dotenv()
 
 # Retrieve the OpenAI API key from environment variables
-openai_api_key = os.environ.get("OPENAI_API_KEY")
-if not openai_api_key:
-    st.error("OpenAI API key not set in environment variables.")
-    st.stop()
-
-# Set the OpenAI API key in the environment variable for OpenAI library use
-os.environ["OPENAI_API_KEY"] = openai_api_key
-
-# Directly specify the path to your Google Cloud service account JSON file
-# Replace 'service_account.json' with the path to your service account file
-google_credentials_path = "service_account.json"  # Update this path as needed
-
-# Check if the service account file exists
-if not os.path.exists(google_credentials_path):
-    st.error(
-        f"Google Application Credentials file not found at {google_credentials_path}."
-    )
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+google_credentials_json = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
+if not openai_api_key or google_credentials_json:
+    st.error("OpenAI API or Google Credentials keys not set in environment variables.")
     st.stop()
 
 
@@ -50,7 +35,7 @@ def get_bigquery_client():
     try:
         # Load credentials from the service account file
         credentials = service_account.Credentials.from_service_account_file(
-            google_credentials_path
+            google_credentials_json
         )
         # Initialize the BigQuery client with the loaded credentials
         client = bigquery.Client(
