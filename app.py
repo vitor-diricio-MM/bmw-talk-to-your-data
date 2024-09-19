@@ -19,7 +19,29 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # configure page
-st.set_page_config(page_title="BMW TALK TO YOUR DATA", page_icon="💬")
+st.set_page_config(
+    page_title="BMW data-talk",
+    page_icon="./assets/BMW-icon.png",  # Replace with your icon path
+    layout="wide",  # Optional: you can use “centered” instead
+    initial_sidebar_state="expanded",  # Optional
+)
+# Custom CSS
+st.markdown(
+    """
+                <style>
+                .big-font {
+                    font-size:30px !important;
+                    font-weight: bold;
+                    color: #1E90FF;
+                }
+                .stApp {
+                    background-image: url('https://i.ibb.co/WtHbV3n/background.jpg');
+                    background-size: cover;
+                }
+                </style>
+            """,
+    unsafe_allow_html=True,
+)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -221,7 +243,7 @@ def generate_response(message):
 
 # Build the Streamlit application interface
 def main():
-    st.header("BMW TALK TO YOUR DATA")
+    st.header("BMW Facebook posts")
     st.write("Talk to your posts data...")
 
     # Initialize session state for conversation history if not already initialized
