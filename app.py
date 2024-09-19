@@ -25,7 +25,7 @@ st.set_page_config(page_title="BMW TALK TO YOUR DATA", page_icon="💬")
 # Retrieve the OpenAI API key from environment variables
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 google_credentials_json = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
-if not openai_api_key or google_credentials_json:
+if not openai_api_key or not google_credentials_json:
     st.error("OpenAI API or Google Credentials keys not set in environment variables.")
     st.stop()
 
@@ -34,7 +34,7 @@ if not openai_api_key or google_credentials_json:
 def get_bigquery_client():
     try:
         # Load credentials from the service account file
-        credentials = service_account.Credentials.from_service_account_file(
+        credentials = service_account.Credentials.from_service_account_info(
             google_credentials_json
         )
         # Initialize the BigQuery client with the loaded credentials
