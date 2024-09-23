@@ -13,6 +13,7 @@ from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.docstore.document import Document
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,17 +44,15 @@ with col2:
 load_dotenv()
 
 # Retrieve the OpenAI API key from environment variables
-openai_api_key = os.environ.get("OPENAI_API_KEY")
-if not openai_api_key:
-    st.error("OpenAI API key not set in environment variables.")
+gemini_api_key = os.environ.get("GEMINI_API_KEY")
+if not gemini_api_key:
+    st.error("Gemini API key not set in environment variables.")
     st.stop()
 
 # Set the OpenAI API key in the environment variable for OpenAI library use
-os.environ["OPENAI_API_KEY"] = openai_api_key
+os.environ["GEMINI_API_KEY"] = gemini_api_key
 
-# Directly specify the path to your Google Cloud service account JSON file
-# Replace 'service_account.json' with the path to your service account file
-google_credentials_path = "service_account.json"  # Update this path as needed
+google_credentials_path = "service_account.json"
 
 # Check if the service account file exists
 if not os.path.exists(google_credentials_path):
@@ -134,7 +133,7 @@ data = load_data()
 # Initialize OpenAI embeddings and FAISS vector store
 def initialize_vector_store(data):
     try:
-        embeddings = OpenAIEmbeddings()
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         documents = []
         for row in data:
             # Create a text representation of the row by concatenating key-value pairs
@@ -170,12 +169,12 @@ def retrieve_info(query, k=5):
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
 # Setup the language model for generating responses
-llm = ChatOpenAI(
+llm = ChatGoogleGenerativeAI(
+    model="gemini-pro",
     temperature=0,
-    model="gpt-4o",
-    max_tokens=1000,
-    openai_api_key=openai_api_key,
+    max_output_tokens=1000,
 )
+
 
 # Define the prompt template for the assistant
 template = """

@@ -10,3 +10,4 @@ streamlit
 google-cloud-bigquery
 langchain-community
 langchain-openai
+langchain-google-genai
